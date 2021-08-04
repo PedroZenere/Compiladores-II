@@ -23,91 +23,21 @@ atrib = '\:='
 
 #Abrindo arquivo
 def readfile():
-    with open('exemplo.txt', 'r') as arq:
-        texto = arq.readlines()
-        return texto
+  with open('../exemplo.txt', 'r') as arq:
+      texto = arq.readlines()
+      return texto
     
 def lexico():
   global tokenizer
-   
+
   reg = atrib + '|' + ident + '|' + pont + '|' + decimal + '|' + comentarios + '|' + comentarios2 + '|' + op_arit + '|' + op_rel
 
-    #Separando cada Token e colocando em uma lista
+  #Separando cada Token e colocando em uma lista
   tokenizer = nltk.RegexpTokenizer(reg)
-    # print (" \n============== Lista de Tokens Classificados  =================\n\n")
-    
-    # countLines = 1
-    # for line in texto:
-    #     termList = tokenizer.tokenize(line)
-        #print('TermList: ', termList)
-        # if len(termList) != 0:
-        #     classifaTokens(termList, countLines)
-        # countLines += 1
 
-    #return tokenizer
-
-    #print('Lista: ', texto)
-
-# def lexico():
-#   # Identificando palavras chaves
-
-
-#   # Abrindo arquivo
-#   with open('exemplo.txt', 'r') as arq:
-#       texto = arq.read()
-#       # print ("============== Arquivo  =================\n\n")
-#       # print(texto)
-
-
-#   # Expressões Regulares
-#   ident = '[^\W\d_]+'
-#   pont = '\(|\)|\;|\:|\$|\,'
-#   numeros = '\d\.\d*|\.\d*|\d+'
-#   decimal = '[-+]?\d*\.?\d+|[-+]?\d+'
-#   comentarios = '/\*.*?\*/'
-#   comentarios2 = '\{.*?\}'
-#   op_arit = '\+|\-|\*|\/'
-#   op_rel = '(?:<=?|>=?|==|!=)'
-#   atrib = '\:='
-
-
-#   reg = atrib + '|' + ident + '|' + pont + '|' + decimal + '|' + comentarios + '|' + comentarios2 + '|' + op_arit + '|' + op_rel
-#   #reg = atrib + '|' + ident + '|' +  decimal
-#   # Separando cada Token e colocando em uma lista
-#   global termList
-#   tokenizer = nltk.RegexpTokenizer(reg)
-#   termList = tokenizer.tokenize(texto)
-#   print(" \n============== Lista de Tokens Classificados  =================\n\n")
-
-# def removeComentarios():
-#   global termList
-#   listDelete = []
-#   cont = 0
-#   for ch in termList:
-#     t = ch.split('/*')
-#     if(len(t) > 1):
-#       listDelete.append(cont)
-#     else:
-#       t = ch.split('{')
-#       if(len(t) > 1):
-#         listDelete.append(cont)
-#     cont += 1
-  
-#   cont = 0
-#   pos = 1
-#   for i in listDelete:
-#     del(termList[i])
-#     if cont+1 < len(listDelete): 
-#       listDelete[cont+1] = listDelete[cont+1] - pos
-#     cont += 1
-#     pos += 1
-
-  # print('Tamanho: ', len(termList))
-  # print('LISTA ATUALIZADAA: ', termList)
-
-# print(termList)
-# termList
 def atualizaLista():
+  global line
+
   cont = 0
   for l in texto:
     termList = tokenizer.tokenize(l)
@@ -134,21 +64,33 @@ def iniciaVariaveis():
   ch = termList[0]
 
 def proxLinha():
+  global line
   line += 1
   i = 0
 
   termList = atualizaLista()
 
-def comentarios():
+  return termList
+
+def coment(ch):
   #ignorar comentarios
+  t = list(ch)
+  if(t[0] == '/' and t[1] == '*' or t[0] == '{'):
+    return True
+  
+  return False
 
 def proxsimb():
   global i
   global ch
+  global termList
 
-  i = i+1
+  i += 1
+  if(i <= (len(termList) - 1) and coment(termList[i])):
+    i += 1
+
   if(i > (len(termList) - 1)):
-    proxLinha()
+    termList = proxLinha()
 
   ch = termList[i]
   return ch
@@ -159,7 +101,7 @@ def programa():
 
   if ch == 'program':
     ch = proxsimb()
-
+    print(ch)
     if ch.isalpha() and ch not in palavra_reservada:
       ch = proxsimb()
       corpo()
@@ -590,3 +532,76 @@ if __name__ == "__main__":
   print('Cadeia Aceita')
 
    
+    # print (" \n============== Lista de Tokens Classificados  =================\n\n")
+    
+    # countLines = 1
+    # for line in texto:
+    #     termList = tokenizer.tokenize(line)
+        #print('TermList: ', termList)
+        # if len(termList) != 0:
+        #     classifaTokens(termList, countLines)
+        # countLines += 1
+
+    #return tokenizer
+
+    #print('Lista: ', texto)
+
+# def lexico():
+#   # Identificando palavras chaves
+
+
+#   # Abrindo arquivo
+#   with open('exemplo.txt', 'r') as arq:
+#       texto = arq.read()
+#       # print ("============== Arquivo  =================\n\n")
+#       # print(texto)
+
+
+#   # Expressões Regulares
+#   ident = '[^\W\d_]+'
+#   pont = '\(|\)|\;|\:|\$|\,'
+#   numeros = '\d\.\d*|\.\d*|\d+'
+#   decimal = '[-+]?\d*\.?\d+|[-+]?\d+'
+#   comentarios = '/\*.*?\*/'
+#   comentarios2 = '\{.*?\}'
+#   op_arit = '\+|\-|\*|\/'
+#   op_rel = '(?:<=?|>=?|==|!=)'
+#   atrib = '\:='
+
+
+#   reg = atrib + '|' + ident + '|' + pont + '|' + decimal + '|' + comentarios + '|' + comentarios2 + '|' + op_arit + '|' + op_rel
+#   #reg = atrib + '|' + ident + '|' +  decimal
+#   # Separando cada Token e colocando em uma lista
+#   global termList
+#   tokenizer = nltk.RegexpTokenizer(reg)
+#   termList = tokenizer.tokenize(texto)
+#   print(" \n============== Lista de Tokens Classificados  =================\n\n")
+
+# def removeComentarios():
+#   global termList
+#   listDelete = []
+#   cont = 0
+#   for ch in termList:
+#     t = ch.split('/*')
+#     if(len(t) > 1):
+#       listDelete.append(cont)
+#     else:
+#       t = ch.split('{')
+#       if(len(t) > 1):
+#         listDelete.append(cont)
+#     cont += 1
+  
+#   cont = 0
+#   pos = 1
+#   for i in listDelete:
+#     del(termList[i])
+#     if cont+1 < len(listDelete): 
+#       listDelete[cont+1] = listDelete[cont+1] - pos
+#     cont += 1
+#     pos += 1
+
+  # print('Tamanho: ', len(termList))
+  # print('LISTA ATUALIZADAA: ', termList)
+
+# print(termList)
+# termList
