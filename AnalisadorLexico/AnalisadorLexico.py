@@ -23,7 +23,7 @@ atrib = '\:='
 
 #Abrindo arquivo
 def readfile():
-    with open('exemplo.txt', 'r') as arq:
+    with open('../exemplo.txt', 'r') as arq:
         texto = arq.readlines()
         return texto
     
