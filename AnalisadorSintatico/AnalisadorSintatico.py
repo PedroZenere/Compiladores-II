@@ -23,8 +23,6 @@ op_rel = '(?:<=?|>=?|==|!=)'
 atrib = '\:='
 
 # Abrindo arquivo
-
-
 def readfile():
     with open('../exemplo.txt', 'r') as arq:
         texto = arq.readlines()
@@ -40,7 +38,7 @@ def lexico():
     # Separando cada Token e colocando em uma lista
     tokenizer = nltk.RegexpTokenizer(reg)
 
-
+#Atualiza a lista de termos conforme passa pelas linhas do arquivo
 def atualizaLista():
     global line
     global termList
@@ -54,25 +52,21 @@ def atualizaLista():
             break
         cont += 1
 
-    # return termList
-
-
+#Inicia as variaveis de controle
 def iniciaVariaveis():
     global i
     global ch
     global texto
-    global termList
     global line
 
     texto = readfile()
-
     line = 0
     i = 0
-    #termList = atualizaLista()
+
     atualizaLista()
     ch = termList[0]
 
-
+#Atualiza a lista de termo com a linha em análise
 def proxLinha():
     global line
     global i
@@ -80,20 +74,15 @@ def proxLinha():
     line += 1
     i = 0
 
-    #termList = atualizaLista()
     atualizaLista()
 
-    # return termList
-
-
+ # Verifica se há comentarios e ignora
 def coment(ch):
-    # ignorar comentarios
     t = list(ch)
-    if(t[0] == '/' and t[1] == '*' or t[0] == '{'):
-        return True
-
+    if len(t) > 2:
+        if(t[0] == '/' and t[1] == '*' or t[0] == '{'):
+            return True
     return False
-
 
 def proxsimb():
     global i
@@ -101,20 +90,22 @@ def proxsimb():
     global termList
 
     i += 1
+    #Verifica se ainda exsitem tokens a serem analisados na lista de termos
     if(i <= (len(termList) - 1) and coment(termList[i])):
         i += 1
 
+    #Verifica se ja chegou ao fim da linha e atualiza a lista de termos
     if(i > (len(termList) - 1)):
-        print('Entrei aqui')
         proxLinha()
-        #termList = proxLinha()
-
+        #Verifica se há comentarios na nova lista de termos
+        if coment(termList[i]):
+            proxLinha()
+    
+    #Retorna o proximo simbolo
     ch = termList[i]
     return ch
 
 # ------- Começa nessa Função
-
-
 def programa():
     global ch
 
@@ -133,7 +124,6 @@ def programa():
         raise Exception('Esperado iniciar com um identificador válido ' +
                         '"program"' + ' Mas encontrado: ' + ch)
 # Ok
-
 
 def corpo():
     global ch
@@ -154,7 +144,6 @@ def corpo():
                         ' Mas encontrado: ' + ch)
 # Ok
 
-
 def dc():
     global ch
 
@@ -172,7 +161,6 @@ def dc():
 
 # Ok
 
-
 def mais_dc():
     global ch
     print('ch: ', ch)
@@ -181,7 +169,6 @@ def mais_dc():
         dc()
     # Verificar ;
 # Ok
-
 
 def dc_v():
     global ch
@@ -199,7 +186,6 @@ def dc_v():
                         '"var"' + ' válido. Mas encontrado: ' + ch)
 # Ok
 
-
 def variaveis():
     global ch
 
@@ -212,7 +198,6 @@ def variaveis():
     #   raise Exception('Esperado um identificador válido. Mas encontrado: ' + ch)
 # Ok
 
-
 def mais_var():
     global ch
 
@@ -221,7 +206,6 @@ def mais_var():
         variaveis()
     # checar virgula?
 # OK
-
 
 def tipo_var():
     global ch
@@ -234,7 +218,6 @@ def tipo_var():
         raise Exception('Esperado um tipo ' +
                         '"integer ou real"' + ' Mas encontrado: ' + ch)
 # Ok
-
 
 def dc_p():
     global ch
@@ -254,7 +237,6 @@ def dc_p():
                         '"procedure"' + ' válido. Mas encontrado: ' + ch)
 # Ok
 
-
 def parametros():
     global ch
 
@@ -268,7 +250,6 @@ def parametros():
         raise Exception('Esperado um ' + '"("' + ' Mas encontrado: ' + ch)
 # Ok
 
-
 def lista_par():
     global ch
 
@@ -279,7 +260,6 @@ def lista_par():
         mais_par()
 # Ok
 
-
 def mais_par():
     global ch
 
@@ -287,7 +267,6 @@ def mais_par():
         ch = proxsimb()
         lista_par()
     # Verificar ;
-
 
 def corpo_p():
     global ch
@@ -306,7 +285,6 @@ def corpo_p():
         raise Exception('Esperado encontrar ' + '"begin"' +
                         ' Mas encontrado: ' + ch)
 
-
 def dc_loc():
     global ch
 
@@ -314,7 +292,6 @@ def dc_loc():
     # ch = proxsimb()
     mais_dcloc()
     # Ok
-
 
 def mais_dcloc():
     global ch
@@ -324,7 +301,6 @@ def mais_dcloc():
         dc_loc()
     # Verificar ;
     # Ok
-
 
 def lista_arg():
     global ch
@@ -340,7 +316,6 @@ def lista_arg():
                             ' Mas encontrado: ' + ch)
     # Ok
 
-
 def argumentos():
     global ch
 
@@ -348,7 +323,6 @@ def argumentos():
         ch = proxsimb()
         mais_ident()
     # Ok
-
 
 def mais_ident():
     global ch
@@ -358,7 +332,6 @@ def mais_ident():
         argumentos()
     # Ok
 
-
 def p_falsa():
     global ch
 
@@ -367,12 +340,10 @@ def p_falsa():
         comandos()
     # Ok
 
-
 def comandos():
     comando()
     mais_comandos()
     # Ok
-
 
 def mais_comandos():
     global ch
@@ -381,7 +352,6 @@ def mais_comandos():
         ch = proxsimb()
         comandos()
     # Ok
-
 
 def comando():
     global ch
@@ -458,7 +428,6 @@ def comando():
         restoIdent()
     # Ok
 
-
 def restoIdent():
     global ch
 
@@ -469,7 +438,6 @@ def restoIdent():
         lista_arg()
     # Ok
 
-
 def condicao():
     global ch
 
@@ -477,7 +445,6 @@ def condicao():
     relacao()
     expressao()
     # Ok
-
 
 def relacao():
     global ch
@@ -489,7 +456,6 @@ def relacao():
             'Esperado encontrar um operador relacional valido. Mas encontrado: ' + ch)
         # Ok
 
-
 def expressao():
     global ch
 
@@ -498,14 +464,12 @@ def expressao():
         outros_termos()
     # Ok
 
-
 def op_un():
     global ch
 
     if ch in operador_aritmetico:
         ch = proxsimb()
     # Ok
-
 
 def outros_termos():
     global ch
@@ -516,18 +480,15 @@ def outros_termos():
         outros_termos()
     # OK - checar melhor - (recursao infinita)
 
-
 def op_ad():
     global ch
 
     if ch == '+' or ch == '-':
         ch = proxsimb()
-        #ch = proxsimb()
     else:
         raise Exception(
             'Esperado encontrar um operador aritmetico valido. Mas encontrado: ' + ch)
     # Ok
-
 
 def termo():
     global ch
@@ -537,7 +498,6 @@ def termo():
     mais_fatores()
     # Ok
 
-
 def mais_fatores():
     global ch
 
@@ -546,7 +506,6 @@ def mais_fatores():
         fator()
         mais_fatores()
        # OK - checar melhor - (recursao infinita)
-
 
 def op_mul():
     global ch
@@ -558,7 +517,6 @@ def op_mul():
     #   raise Exception('Esperado encontrar um operador aritmetico valido. Mas encontrado: ' + ch)
        # OK
 
-
 def fator():
     global ch
 
@@ -568,7 +526,6 @@ def fator():
     elif ch == '(':
         ch = proxsimb()
         expressao()
-        #ch = proxsimb()
 
         if ch == ')':
             ch = proxsimb()
@@ -584,7 +541,6 @@ def fator():
     elif (ch not in delimitador and ch not in operador_aritmetico and ch not in operador_relacional and int(ch)):
         print('CH NUM: ', ch)
         ch = proxsimb()
-
 
 if __name__ == "__main__":
     lexico()
