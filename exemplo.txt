@@ -17,7 +17,7 @@ begin
     write(a)
   else
     write(l)
-  $
+  
 end;
 
 procedure dois (j: integer; k: real; l: integer)
@@ -29,7 +29,7 @@ begin
   $;
   l := l + j + cont;
   write(k);
-  write(l)
+  write(l);
 end
 
 /*  corpo * principal / */
