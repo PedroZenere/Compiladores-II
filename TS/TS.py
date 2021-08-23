@@ -37,6 +37,8 @@ atrib = '\:='
 # 3. Tipos:
 #   3.1 - Integer
 #   3.2 - Real
+
+#-------------------- Definindo estrutura da TS ------------------
 class TSimbolos:
     def setEscopo(self, escopo):
         self.escopo = escopo
@@ -67,21 +69,9 @@ class TSimbolos:
         return self.valor
     def getExcluido(self):
         return self.excluido
+#--------------------------------------------------------------------------
 
-# Abrindo arquivo
-def readfile():
-    with open('../exemplo.txt', 'r') as arq:
-        texto = arq.readlines()
-        return texto
-
-def isFloat(ch):
-    num = list(ch)
-
-    for element in num:
-        if element == '.':
-            return True
-    return False
-
+#------------------ Construtores de Objetos ---------------------------------
 def montaObjeto(escopo, cadeia, token, categoria, tipo, valor='-'):
     descritor = TSimbolos()
 
@@ -95,19 +85,38 @@ def montaObjeto(escopo, cadeia, token, categoria, tipo, valor='-'):
 
     return descritor
 
+def montaObjetoTSVariaveis(escopo, cadeia, token, categoria):
+    obj = TSimbolos()
+
+    obj.setEscopo(escopo)
+    obj.setCadeia(cadeia)
+    obj.setToken(token)
+    obj.setCategoria(categoria)
+    obj.setValor('-')
+    obj.setExcluido(0)
+
+    return obj
+
+#-------------------------------------------------------------------------
+
 #---------------- Tabela de Simbolos ---------------------------
 def inserirTS(escopo, cadeia, token, categoria, tipo, valor='-'):
     global matriz
-    global obj
+    
+    obj = montaObjeto(escopo, cadeia, token, categoria, tipo, valor)
+    matriz.append(obj)
 
-    if type(cadeia) is list:
+def inserirTSVariaveis(escopo, cadeia, token, categoria):
+    global matriz
+
+    obj = montaObjetoTSVariaveis(escopo, cadeia, token, categoria)
+    matriz.append(obj)
+
+def updateTSTipoVariavies(escopo, cadeia, categoria, tipo):
+    for obj in matriz:
         for var in cadeia:
-            obj = montaObjeto(escopo, var, token, categoria, tipo, valor)
-            matriz.append(obj)
-
-    elif type(cadeia) is str:
-        obj = montaObjeto(escopo, cadeia, token, categoria, tipo, valor)
-        matriz.append(obj)
+            if obj.getEscopo() == escopo and obj.getCadeia() == var and obj.getCategoria() == categoria:
+                obj.setTipo(tipo)
         
 def buscarTS(escopo, cadeia):
     #Retorna True se encontrar
@@ -124,14 +133,20 @@ def removerTS(escopo):
             i.setExcluido(1)
 
 def imprimirTS():
-    print('-------------- TABELA DE SIMBOLOS ------------------\n\n')
+    print('----------------- TABELA DE SIMBOLOS --------------------\n')
 
-    t = PrettyTable(['Escopo', 'Cadeia', 'Token', 'Categoria', 'Tipo', 'Valor', 'Excluido'])
+    t = PrettyTable(['Escopo', 'Cadeia', 'Token', 'Categoria', 'Tipo', 'Valor'])
     for i in matriz:
-        t.add_row([i.getEscopo(), i.getCadeia(), i.getToken(), i.getCategoria(), i.getTipo(), i.getValor(), i.getExcluido()])
+        t.add_row([i.getEscopo(), i.getCadeia(), i.getToken(), i.getCategoria(), i.getTipo(), i.getValor()])
     print(t)
 
 #----------------------------------------------------------------------------------
+
+# Abrindo arquivo
+def readfile():
+    with open('../exemplo.txt', 'r') as arq:
+        texto = arq.readlines()
+        return texto
 
 #------------------- Analisador Léxico --------------------------------------------
 def lexico():
@@ -147,7 +162,7 @@ def lexico():
 
 #----------------------------------------------------------------------------------
 
-#------------------ Funções que percorrrem os tokens ------------------------------
+#------------------ Funções que percorrrem os tokens e auxiliares ------------------------------
 #Atualiza a lista de termos conforme passa pelas linhas do arquivo
 def atualizaLista():
     global line
@@ -156,6 +171,7 @@ def atualizaLista():
     cont = 0
     for l in texto:
         termList = tokenizer.tokenize(l)
+        # print(termList)
         if len(termList) == 0 and cont == line:
             line += 1
         if cont == line:
@@ -205,6 +221,7 @@ def proxsimb():
     global termList
 
     i += 1
+
     #Verifica se ainda exsitem tokens a serem analisados na lista de termos
     if(i <= (len(termList) - 1) and coment(termList[i])):
         i += 1
@@ -219,6 +236,14 @@ def proxsimb():
     #Retorna o proximo simbolo
     ch = termList[i]
     return ch
+
+def isFloat(ch):
+    num = list(ch)
+
+    for element in num:
+        if element == '.':
+            return True
+    return False
 #--------------------------------------------------------------------------------------
 
 # --------------------- Analisador Sintatico ------------------------------------------
@@ -236,10 +261,10 @@ def programa():
             corpo()
         else:
             raise Exception(
-                'Linha: ' + str(line) + '. ' + 'Esperado um identificador válido. Mas encontrado: ' + ch)
+                'Linha: ' + str(line+1) + '. ' + 'Esperado um identificador válido. Mas encontrado: ' + ch)
 
     else:
-        raise Exception('Linha: ' + str(line) + '. ' + 'Esperado iniciar com um identificador válido ' +
+        raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado iniciar com um identificador válido ' +
                         '"program"' + ' Mas encontrado: ' + ch)
 
 def corpo():
@@ -253,11 +278,11 @@ def corpo():
         if ch == 'end':
             ch = proxsimb()
         else:
-            raise Exception('Linha: ' + str(line) + '. ' + 'Esperado encontrar ' + '"end"' +
+            raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado encontrar ' + '"end"' +
                             ' Mas encontrado: ' + ch)
 
     else:
-        raise Exception('Linha: ' + str(line) + '. ' + 'Esperado encontrar ' + '"begin"' +
+        raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado encontrar ' + '"begin"' +
                         ' Mas encontrado: ' + ch)
 
 def dc():
@@ -275,7 +300,7 @@ def dc():
         dc_p()
         mais_dc()
     else:
-        raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um identificador de variável ' + '"var"' +
+        raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um identificador de variável ' + '"var"' +
                         ' ou de função ' + '"procedure"' + ' válido. Mas encontrado: ' + ch)
 
 def mais_dc():
@@ -301,16 +326,16 @@ def dc_v():
             tipo_var()
 
             #-------------- TABELA DE SIMBOLOS ------------
-            #Insere na tabela de simbolos, após passar as verificações
-            inserirTS(escopoTS, lista_varTS, tokenTS, catTS, tipoVariavelTS)
+            #IAtualiza tabela de simbolos com o tipo das variaiveis, após passar as verificações
+            updateTSTipoVariavies(escopoTS, lista_varTS, catTS, tipoVariavelTS)
             #Limpa Buffer de variaveis apos terminar as declaracoes
             lista_varTS.clear()
             #-----------------------------------------------
 
         else:
-            raise Exception('Linha: ' + str(line) + '. ' + 'Esperado ' + '":"' + '. Mas encontrado: ' + ch)
+            raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado ' + '":"' + '. Mas encontrado: ' + ch)
     else:
-        raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um identificador de variável ' +
+        raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um identificador de variável ' +
                         '"var"' + ' válido. Mas encontrado: ' + ch)
 
 def variaveis(contexto='semcomando'):
@@ -323,20 +348,22 @@ def variaveis(contexto='semcomando'):
             if not buscarTS(escopoTS, ch):
                 #inserindo na lista as variaveis
                 lista_varTS.append(ch)
+                #Inserindo na tabela de simbolos
+                inserirTSVariaveis(escopoTS, ch, tokenTS, catTS)
                 ch = proxsimb()
                 mais_var()
             else:
                 raise Exception(
-                    'Linha: ' + str(line) + '. ' + 'Identificador: ' + "'"+ch+"'" + ' já inserido.')
+                    'Linha: ' + str(line+1) + '. ' + 'Identificador: ' + "'"+ch+"'" + ' já inserido.')
         elif contexto == 'comando':
             if buscarTS(escopoTS, ch):
                 ch = proxsimb()
                 restoIdent()
             else:
                 raise Exception(
-                    'Linha: ' + str(line) + '. ' + 'Identificador: ' + "'"+ch+"'" + ' não refenciado')
+                    'Linha: ' + str(line+1) + '. ' + 'Identificador: ' + "'"+ch+"'" + ' não refenciado')
     else:
-      raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um identificador válido. Mas encontrado: ' + ch)
+      raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um identificador válido. Mas encontrado: ' + ch)
 
 def mais_var():
     global ch
@@ -356,7 +383,7 @@ def tipo_var():
         tipoVariavelTS = ch
         ch = proxsimb()
     else:
-        raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um tipo ' +
+        raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um tipo ' +
                         '"integer ou real"' + ' Mas encontrado: ' + ch)
 
 def dc_p():
@@ -378,9 +405,9 @@ def dc_p():
             corpo_p()
         else:
             raise Exception(
-                'Linha: ' + str(line) + '. ' + 'Esperado um identificador válido. Mas encontrado: ' + ch)
+                'Linha: ' + str(line+1) + '. ' + 'Esperado um identificador válido. Mas encontrado: ' + ch)
     else:
-        raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um identificador de procedimento ' +
+        raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um identificador de procedimento ' +
                         '"procedure"' + ' válido. Mas encontrado: ' + ch)
 
 def parametros():
@@ -391,9 +418,9 @@ def parametros():
         lista_par()
 
         if ch != ')':
-            raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um ' + '")"' + ' Mas encontrado: ' + ch)
+            raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um ' + '")"' + ' Mas encontrado: ' + ch)
     else:
-        raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um ' + '"("' + ' Mas encontrado: ' + ch)
+        raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um ' + '"("' + ' Mas encontrado: ' + ch)
 
 
 def lista_par():
@@ -407,8 +434,8 @@ def lista_par():
         tipo_var()
 
         #-------------- TABELA DE SIMBOLOS ------------
-        #Insere na tabela de simbolos, após passar as verificações
-        inserirTS(escopoTS, lista_varTS, tokenTS, catTS, tipoVariavelTS)
+        #Atualiza tabela de simbolos com o tipo das variaiveis, após passar as verificações
+        updateTSTipoVariavies(escopoTS, lista_varTS, catTS, tipoVariavelTS)
         #Limpa Buffer de variaveis apos terminar as declaracoes
         lista_varTS.clear()
         #-----------------------------------------------
@@ -436,10 +463,10 @@ def corpo_p():
             escopoTS = 'global'
             ch = proxsimb()
         else:
-            raise Exception('Linha: ' + str(line) + '. ' + 'Esperado encontrar ' + '"end"' +
+            raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado encontrar ' + '"end"' +
                             ' Mas encontrado: ' + ch)
     else:
-        raise Exception('Linha: ' + str(line) + '. ' + 'Esperado encontrar ' + '"begin"' +
+        raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado encontrar ' + '"begin"' +
                         ' Mas encontrado: ' + ch)
 
 def dc_loc():
@@ -465,7 +492,7 @@ def lista_arg():
         if ch == ')':
             ch = proxsimb()
         else:
-            raise Exception('Linha: ' + str(line) + '. ' + 'Esperado encontrar ' + '")"' +
+            raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado encontrar ' + '")"' +
                             ' Mas encontrado: ' + ch)
 
 def argumentos():
@@ -478,7 +505,7 @@ def argumentos():
             mais_ident()
         else:
             raise Exception(
-                        'Linha: ' + str(line) + '. ' + 'Identificador: ' + "'"+ch+"'" + ' não refenciado')
+                        'Linha: ' + str(line+1) + '. ' + 'Identificador: ' + "'"+ch+"'" + ' não refenciado')
 
 
 def mais_ident():
@@ -518,10 +545,10 @@ def comando():
             if ch == ')':
                 ch = proxsimb()
             else:
-                raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um ' + '")"' +
+                raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um ' + '")"' +
                                 ' Mas encontrado: ' + ch)
         else:
-            raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um ' + '"("' + ' Mas encontrado: ' + ch)
+            raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um ' + '"("' + ' Mas encontrado: ' + ch)
 
     elif ch == 'write':
         ch = proxsimb()
@@ -532,10 +559,10 @@ def comando():
             if ch == ')':
                 ch = proxsimb()
             else:
-                raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um ' + '")"' +
+                raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um ' + '")"' +
                                 ' Mas encontrado: ' + ch)
         else:
-            raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um ' + '"("' + ' Mas encontrado: ' + ch)
+            raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um ' + '"("' + ' Mas encontrado: ' + ch)
 
     elif ch == 'while':
         ch = proxsimb()
@@ -546,10 +573,10 @@ def comando():
             if ch == '$':
                 ch = proxsimb()
             else:
-                raise Exception('Linha: ' + str(line) + '. ' + 'Esperado o simbolo ' +
+                raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado o simbolo ' +
                                 '"$"' + ' Mas encontrado: ' + ch)
         else:
-            raise Exception('Linha: ' + str(line) + '. ' + 'Esperado o comando ' + '"do"' +
+            raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado o comando ' + '"do"' +
                             ' Mas encontrado: ' + ch)
 
     elif ch == 'if':
@@ -563,10 +590,10 @@ def comando():
             if ch == '$':
                 ch = proxsimb()
             else:
-                raise Exception('Linha: ' + str(line) + '. ' + 'Esperado o simbolo ' +
+                raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado o simbolo ' +
                                 '"$"' + ' Mas encontrado: ' + ch)
         else:
-            raise Exception('Linha: ' + str(line) + '. ' + 'Esperado o comando ' +
+            raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado o comando ' +
                             '"then"' + ' Mas encontrado: ' + ch)
 
     elif ch.isalpha() and ch not in palavra_reservada:
@@ -576,7 +603,7 @@ def comando():
             restoIdent()
         else:
             raise Exception(
-                'Linha: ' + str(line) + '. ' + 'Identificador: ' + "'"+ch+"'" + ' não refenciado')
+                'Linha: ' + str(line+1) + '. ' + 'Identificador: ' + "'"+ch+"'" + ' não refenciado')
 
 def restoIdent():
     global ch
@@ -602,7 +629,7 @@ def relacao():
         ch = proxsimb()
     else:
         raise Exception(
-            'Linha: ' + str(line) + '. ' + 'Esperado encontrar um operador relacional valido. Mas encontrado: ' + ch)
+            'Linha: ' + str(line+1) + '. ' + 'Esperado encontrar um operador relacional valido. Mas encontrado: ' + ch)
 
 def expressao():
     global ch
@@ -632,7 +659,7 @@ def op_ad():
         ch = proxsimb()
     else:
         raise Exception(
-            'Linha: ' + str(line) + '. ' + 'Esperado encontrar um operador aritmetico valido. Mas encontrado: ' + ch)
+            'Linha: ' + str(line+1) + '. ' + 'Esperado encontrar um operador aritmetico valido. Mas encontrado: ' + ch)
 
 def termo():
     global ch
@@ -655,7 +682,7 @@ def op_mul():
     if ch == '*' or ch == '/':
         ch = proxsimb()
     else:
-      raise Exception('Linha: ' + str(line) + '. ' + 'Esperado encontrar um operador aritmetico valido. Mas encontrado: ' + ch)
+      raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado encontrar um operador aritmetico valido. Mas encontrado: ' + ch)
 
 def fator():
     global ch
@@ -665,7 +692,7 @@ def fator():
             ch = proxsimb()
         else:
             raise Exception(
-                'Linha: ' + str(line) + '. ' + 'Identificador: ' + "'"+ch+"'" + ' não refenciado')
+                'Linha: ' + str(line+1) + '. ' + 'Identificador: ' + "'"+ch+"'" + ' não refenciado')
 
     elif ch == '(':
         ch = proxsimb()
@@ -674,7 +701,7 @@ def fator():
         if ch == ')':
             ch = proxsimb()
         else:
-            raise Exception('Linha: ' + str(line) + '. ' + 'Esperado um ' + '")"' + ' Mas encontrado: ' + ch)
+            raise Exception('Linha: ' + str(line+1) + '. ' + 'Esperado um ' + '")"' + ' Mas encontrado: ' + ch)
     
     elif (ch not in delimitador and ch not in operador_aritmetico and ch not in operador_relacional and not isFloat(ch)):
         inserirTS(escopoTS, ch, 'num', '-', 'integer', ch)
@@ -690,5 +717,6 @@ if __name__ == "__main__":
     lexico()
     iniciaVariaveis()
     programa()
+    print('\nCadeia Aceita!!!\n\n')
     imprimirTS()
-    print('Cadeia Aceita')
+    
